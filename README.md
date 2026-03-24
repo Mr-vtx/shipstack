@@ -1,4 +1,4 @@
-# shipstack
+# skiiyo
 
 A production-ready Fastify backend starter built for real-world APIs.
 
@@ -51,8 +51,8 @@ Simple and predictable. Easy to extend.
 ## Getting started
 
 ```bash
-git clone https://github.com/Mr-vtx/shipstack.git
-cd shipstack
+git clone https://github.com/Mr-vtx/skiiyo.git
+cd skiiyo
 npm install
 cp .env.example .env
 npm run dev
