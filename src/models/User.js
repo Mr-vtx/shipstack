@@ -1,0 +1,114 @@
+"use strict";
+
+import mongoose from "mongoose";
+import bcrypt from "bcryptjs";
+
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: [true, "Username is required"],
+      unique: true,
+      trim: true,
+      minlength: [4, "Username must be at least 4 characters"],
+      maxlength: [30, "Username cannot exceed 30 characters"],
+      match: [
+        /^[a-zA-Z0-9_]+$/,
+        "Username can only contain letters, numbers and underscores",
+      ],
+    },
+    email: {
+      type: String,
+      required: [true, "Email is required"],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      match: [/^\S+@\S+\.\S+$/, "Please provide a valid email"],
+    },
+    password: {
+      type: String,
+      minlength: [6, "Password must be at least 6 characters"],
+      select: false,
+    },
+    avatar: {
+      type: String,
+      default: null,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+
+    googleId: {
+      type: String,
+      default: null,
+      sparse: true,
+    },
+    refreshToken: {
+      type: String,
+      select: false,
+      default: null,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: false,
+    },
+    dateOfBirth: { type: Date, default: null },
+    passwordResetToken: { type: String, select: false, default: null },
+    passwordResetExpires: { type: Date, select: false, default: null },
+
+    bio: {
+      type: String,
+      maxlength: [200, "Bio cannot exceed 200 characters"],
+      default: null,
+    },
+    country: { type: String, default: null },
+    city: { type: String, default: null },
+    lat: { type: Number, default: null },
+    lng: { type: Number, default: null },
+    
+    fcmTokens: {
+      type: [String],
+      default: [],
+      select: false,
+    },
+
+    isActive: { type: Boolean, default: true },
+    lastSeen: { type: Date, default: Date.now },
+  },
+  {
+    timestamps: true,
+  },
+);
+
+
+userSchema.index({ country: 1 });
+
+userSchema.pre("save", async function () {
+  if (!this.isModified("password") || !this.password) return;
+  this.password = await bcrypt.hash(this.password, 12);
+});
+
+userSchema.methods.comparePassword = async function (candidate) {
+  return bcrypt.compare(candidate, this.password);
+};
+
+userSchema.methods.toSafeObject = function () {
+  const obj = this.toObject();
+  delete obj.password;
+  delete obj.refreshToken;
+  delete obj.passwordResetToken;
+  delete obj.passwordResetExpires;
+  delete obj.fcmTokens;
+  delete obj.__v;
+  return obj;
+};
+
+userSchema.virtual("age").get(function () {
+  if (!this.dateOfBirth) return null;
+  const diff = Date.now() - this.dateOfBirth.getTime();
+  return Math.floor(diff / (1000 * 60 * 60 * 24 * 365.25));
+});
+
+export default mongoose.model("User", userSchema);

@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.log
+src/config/geoip/*.mmdb
+dist/
+.DS_Store
